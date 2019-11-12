@@ -1,0 +1,43 @@
+Source: libvci
+Section: contrib/net
+Priority: optional
+Maintainer: Vyatta Package Maintainers <DL-vyatta-help@att.com>
+Build-depends:
+ debhelper (>= 9),
+ dh-exec,
+ dh-python,
+ golang-github-danos-mgmterror-dev,
+ golang-github-danos-vci-dev,
+ golang-go,
+ pkg-config,
+ python3-dev,
+ swig
+Standards-Version: 3.9.8
+
+Package: libvci1
+Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Pre-Depends: ${misc:Pre-Depends}
+Multi-Arch: same
+Description: Vyatta Component Infrastructure C/C++ library
+ C/C++ library for interfacing with VCI
+
+Package: libvci-dev
+Architecture: any
+Section: contrib/libdevel
+Depends: libvci1 (= ${binary:Version}), ${misc:Depends}
+Multi-Arch: same
+Description: Vyatta Component Infrastructure C/C++ library development files
+ Development files for the C/C++ library for interfacing with VCI
+
+Package: python3-vci
+Section: contrib/python
+Architecture: any
+Depends:
+ libvci1 (= ${binary:Version}),
+ ${misc:Depends},
+ ${python3:Depends},
+ ${shlibs:Depends}
+X-Python3-Version: >= 3.2
+Description: Python 3 bindings to Vyatta Component Infrastructure library
+ Python 3 wrapper for Vyatta Component Infrastructure API

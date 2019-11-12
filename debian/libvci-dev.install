@@ -1,0 +1,5 @@
+#!/usr/bin/dh-exec
+vci.pc usr/lib/${DEB_HOST_MULTIARCH}/pkgconfig
+libvci.so usr/lib/${DEB_HOST_MULTIARCH}
+vci.h /usr/include/
+vci.hpp /usr/include/
