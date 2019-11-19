@@ -38,6 +38,7 @@ struct vci_model {
 
 struct vci_client {
 	uint64_t cd;
+	bool close_on_free;
 };
 
 struct vci_rpccall {
@@ -83,6 +84,21 @@ int
 vci_component_stop(vci_component *comp, vci_error *err)
 {
 	return _vci_component_stop(comp->cd, err);
+}
+
+int
+vci_component_client(vci_component *comp, vci_client **client, vci_error *error)
+{
+	*client = malloc(sizeof(vci_client));
+	if (*client == NULL) {
+		error->app_tag = strdup("vci-internal");
+		error->path = NULL;
+		error->info = strdup("failed to allocate client");
+		return -1;
+	}
+	(*client)->close_on_free = false;
+	(*client)->cd = _vci_component_client(comp->cd);
+	return 0;
 }
 
 int
@@ -158,13 +174,14 @@ vci_client_dial(vci_client **client, vci_error *error)
 		error->info = strdup("failed to allocate client");
 		return -1;
 	}
+	(*client)->close_on_free = true;
 	return _vci_client_dial(&(*client)->cd, error);
 }
 
 void
 vci_client_free(vci_client *client)
 {
-	_vci_client_free(client->cd);
+	_vci_client_free(client->cd, client->close_on_free);
 	free(client);
 }
 

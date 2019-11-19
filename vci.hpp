@@ -46,9 +46,9 @@ namespace vci {
 	class Config {
 	public:
 		virtual void set(
-			const EncodedInput& input) throw (Exception) = 0;
+			const EncodedInput& input)  = 0;
 		virtual void check(
-			const EncodedInput& input) throw (Exception) = 0;
+			const EncodedInput& input)  = 0;
 		virtual EncodedOutput get() = 0;
 		virtual ~Config() {};
 	};
@@ -91,12 +91,14 @@ namespace vci {
 				 std::map<std::string, vci::Method*>> _methods;
 	};
 
+	class Client;
+
 	class Component {
 	public:
 		Component(std::string name);
-		Component& run() throw(Exception);
-		Component& wait() throw(Exception);
-		Component& stop() throw(Exception);
+		Component& run();
+		Component& wait();
+		Component& stop();
 		Component& subscribe(const std::string& module,
 							 const std::string& notification,
 							 Subscriber* subscriber);
@@ -106,17 +108,17 @@ namespace vci {
 		Component& unsubscribe(const std::string& module,
 							   const std::string& notification);
 		Component& model(Model& model);
+		std::shared_ptr<Client> client();
 		~Component();
 	private:
 		_vci::_CompImpl* _impl;
 	};
 
-	class Client;
 	class RPCCall {
 	public:
 		RPCCall();
 		~RPCCall();
-		EncodedOutput output() throw (Exception);
+		EncodedOutput output();
 		friend class Client;
 	private:
 		_vci::_RPCCallImpl* _impl;
@@ -126,8 +128,8 @@ namespace vci {
 	public:
 		Subscription();
 		~Subscription();
-		void run() throw (Exception);
-		void cancel() throw (Exception);
+		void run();
+		void cancel();
 		void coalesce();
 		void drop_after_limit(uint32_t limit);
 		void block_after_limit(uint32_t limit);
@@ -139,25 +141,27 @@ namespace vci {
 
 	class Client {
 	public:
-		Client() throw (Exception);
+		Client();
 		~Client();
 		std::shared_ptr<RPCCall> call(
 			const std::string& module, const std::string& name,
 			const EncodedInput& input);
 		void emit(
 			const std::string& module, const std::string& name,
-			const EncodedInput& data) throw (Exception);
+			const EncodedInput& data);
 		EncodedOutput config_by_model(
-			const std::string& model) throw (Exception);
+			const std::string& model);
 		EncodedOutput state_by_model(
-			const std::string& model) throw (Exception);
+			const std::string& model);
 		std::shared_ptr<Subscription> subscribe(
 			const std::string& module, const std::string& name,
 			Subscriber* subscriber);
 		std::shared_ptr<Subscription> subscribe(
 			const std::string& module, const std::string& name,
 			SubscriberFn subscriber);
+		friend class Component;
 	private:
+		Client(_vci::_ClientImpl* impl);
 		_vci::_ClientImpl* _impl;
 	};
 }

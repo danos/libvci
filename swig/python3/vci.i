@@ -17,6 +17,7 @@
 
 %shared_ptr(vci::RPCCall);
 %shared_ptr(vci::Subscription);
+%shared_ptr(vci::Client);
 
 %feature("director:except") {
 	if ($error != NULL) {

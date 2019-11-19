@@ -6,10 +6,11 @@
 TARGET := libvci.so.1
 TARGET_LINK := libvci.so
 PYTHON3_LIB := swig/python3/_vci.so
+PERL5_LIB := swig/perl5/libvci-perl5.so.1
 
 GOBUILDFLAGS := -buildmode=c-archive
 CFLAGS += -fPIC
-CXXFLAGS += -fPIC -Wno-deprecated
+CXXFLAGS += -fPIC
 
 SOURCES := $(wildcard *.c)
 CPP_SOURCES := $(wildcard *.cpp)
@@ -21,7 +22,7 @@ CPP_GENERATED_OBJS := $(patsubst %.cpp,%.oxx,$(CPP_SOURCES))
 GO_HEADER := cgo-export/vci-interface.h
 GO_LIB := cgo-export/vci-interface.a
 
-all: $(TARGET) $(TARGET_LINK) $(PYTHON3_LIB) vci.pc
+all: $(TARGET) $(TARGET_LINK) $(PYTHON3_LIB) $(PERL5_LIB) vci.pc
 
 $(GO_LIB): $(GO_SOURCES)
 	go build $(GOBUILDFLAGS) -o $(GO_LIB) ./cgo-export
@@ -42,6 +43,9 @@ $(TARGET_LINK): $(TARGET)
 
 $(PYTHON3_LIB): $(TARGET_LINK) vci.hpp vci.h
 	make -C swig/python3
+
+$(PERL5_LIB): $(TARGET_LINK) vci.hpp vci.h
+	make -C swig/perl5
 
 examples/c/vci-c-example: examples/c/main.c vci.h $(TARGET_LINK)
 	gcc -L. -I. -std=gnu11 -o $@ $< -lvci

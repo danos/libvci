@@ -11,11 +11,11 @@
 
 class Config : public vci::Config {
 public:
-	void set(const std::string &in) throw (vci::Exception) {
+	void set(const std::string &in) {
 		std::lock_guard<std::mutex> lock(this->_mu);
 		_config = in;
 	}
-	void check(const std::string &) throw (vci::Exception) {
+	void check(const std::string &) {
 		return;
 	}
 	std::string get() {

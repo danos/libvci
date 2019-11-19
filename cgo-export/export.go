@@ -8,12 +8,14 @@ package main
 /*
 #include <stdlib.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include "../vci.h"
 */
 import "C"
 import (
-	"github.com/danos/vci"
 	"unsafe"
+
+	"github.com/danos/vci"
 )
 
 //export _vci_component_new
@@ -94,6 +96,12 @@ func _vci_component_model(cd C.uint64_t, name *C.char) C.uint64_t {
 	return C.uint64_t(objects.Register(newModel(mod)))
 }
 
+//export _vci_component_client
+func _vci_component_client(cd C.uint64_t) C.uint64_t {
+	client := objects.Get(OD(cd)).(vci.Component).Client()
+	return C.uint64_t(objects.Register(client))
+}
+
 //export _vci_model_config
 func _vci_model_config(md C.uint64_t, cobj *C.vci_config_object) {
 	objects.Get(OD(md)).(vci.Model).Config(cConfig(cobj))
@@ -157,10 +165,12 @@ func _vci_client_dial(client *C.uint64_t, cerr *C.vci_error) C.int {
 }
 
 //export _vci_client_free
-func _vci_client_free(cd C.uint64_t) {
+func _vci_client_free(cd C.uint64_t, closeOnFree C.bool) {
 	client := objects.Get(OD(cd)).(*vci.Client)
 	objects.Unregister(OD(cd))
-	client.Close()
+	if bool(closeOnFree) {
+		client.Close()
+	}
 }
 
 //export _vci_client_emit

@@ -58,6 +58,9 @@ void vci_component_free(vci_component*);
 int vci_component_run(vci_component* comp, vci_error *error);
 int vci_component_wait(vci_component* comp, vci_error *error);
 int vci_component_stop(vci_component* comp, vci_error *error);
+int vci_component_client(vci_component *comp,
+						 vci_client **client,
+						 vci_error *error);
 int vci_component_subscribe(vci_component* comp,
 							const char *module_name,
 							const char *notification_name,

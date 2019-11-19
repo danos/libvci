@@ -10,7 +10,7 @@
 #include "vci.h"
 
 void
-_vci_cpp_error_to_exception(vci_error *error) throw(vci::Exception)
+_vci_cpp_error_to_exception(vci_error *error)
 {
 	std::string app_tag(error->app_tag != NULL ? error->app_tag : "");
 	std::string info(error->info != NULL ? error->info : "");
@@ -122,6 +122,17 @@ struct _vci::_CompImpl {
 	vci_component* comp;
 	~_CompImpl() {
 		vci_component_free(comp);
+	}
+};
+
+struct _vci::_ClientImpl {
+	vci_client* client;
+	_ClientImpl() {};
+	_ClientImpl(vci_client *client) {
+		this->client=client;
+	}
+	~_ClientImpl() {
+		vci_client_free(client);
 	}
 };
 
@@ -252,7 +263,7 @@ vci::Component::model(Model &model)
 }
 
 vci::Component&
-vci::Component::run() throw(vci::Exception)
+vci::Component::run()
 {
 	vci_error err;
 	vci_error_init(&err);
@@ -262,7 +273,7 @@ vci::Component::run() throw(vci::Exception)
 	return *this;
 }
 vci::Component&
-vci::Component::wait() throw(vci::Exception)
+vci::Component::wait()
 {
 	vci_error err;
 	vci_error_init(&err);
@@ -273,7 +284,7 @@ vci::Component::wait() throw(vci::Exception)
 }
 
 vci::Component&
-vci::Component::stop() throw(vci::Exception)
+vci::Component::stop()
 {
 	vci_error err;
 	vci_error_init(&err);
@@ -338,14 +349,23 @@ vci::Component::unsubscribe(
 	return *this;
 }
 
-struct _vci::_ClientImpl {
-	vci_client* client;
-	~_ClientImpl() {
-		vci_client_free(client);
+std::shared_ptr<vci::Client>
+vci::Component::client() {
+	vci_error err;
+	vci_error_init(&err);
+	vci_client *tmp;
+	auto rc = vci_component_client(this->_impl->comp, &tmp, &err);
+	if (rc != 0) {
+		_vci_cpp_error_to_exception(&err);
 	}
-};
+	// Note: std::make_shared doesn't work here as we are using a private
+	//       constructor from the friend class of vci::Client.
+	std::shared_ptr<vci::Client> out(new vci::Client(new _vci::_ClientImpl(tmp)));
+	return out;
+}
 
-vci::Client::Client() throw (Exception)
+
+vci::Client::Client()
 {
 	vci_error err;
 	vci_error_init(&err);
@@ -354,8 +374,11 @@ vci::Client::Client() throw (Exception)
 	if (rc != 0) {
 		_vci_cpp_error_to_exception(&err);
 	}
-	this->_impl = new _vci::_ClientImpl();
-	this->_impl->client=tmp;
+	this->_impl = new _vci::_ClientImpl(tmp);
+}
+
+vci::Client::Client(_vci::_ClientImpl* impl) {
+	this->_impl = impl;
 }
 
 vci::Client::~Client()
@@ -387,7 +410,7 @@ void
 vci::Client::emit(
 	const std::string& module,
 	const std::string& name,
-	const vci::EncodedInput& data) throw (vci::Exception)
+	const vci::EncodedInput& data)
 {
 	vci_error err;
 	vci_error_init(&err);
@@ -400,7 +423,7 @@ vci::Client::emit(
 }
 
 vci::EncodedOutput
-vci::Client::config_by_model(const std::string& model) throw (Exception) {
+vci::Client::config_by_model(const std::string& model) {
 	vci_error err;
 	vci_error_init(&err);
 	char *out;
@@ -413,7 +436,7 @@ vci::Client::config_by_model(const std::string& model) throw (Exception) {
 }
 
 vci::EncodedOutput
-vci::Client::state_by_model(const std::string& model) throw (Exception) {
+vci::Client::state_by_model(const std::string& model) {
 	vci_error err;
 	vci_error_init(&err);
 	char *out;
@@ -467,7 +490,7 @@ vci::Subscription::~Subscription() {
 }
 
 void
-vci::Subscription::run() throw (Exception)
+vci::Subscription::run()
 {
 	vci_error err;
 	vci_error_init(&err);
@@ -478,7 +501,7 @@ vci::Subscription::run() throw (Exception)
 }
 
 void
-vci::Subscription::cancel() throw (Exception)
+vci::Subscription::cancel()
 {
 	vci_error err;
 	vci_error_init(&err);
@@ -517,7 +540,7 @@ vci::RPCCall::~RPCCall() {
 	delete this->_impl;
 }
 
-std::string vci::RPCCall::output() throw (Exception)
+std::string vci::RPCCall::output()
 {
 	char *out;
 	vci_error err;
