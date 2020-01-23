@@ -26,14 +26,7 @@
 }
 
 namespace vci {
-	 %extend Exception {
-		 std::string __repr__() {
-			 return $self->what();
-		 }
-		 std::string __str__() {
-			 return $self->what();
-		 }
-	 }
+	 %rename("_vci_exception") Exception;
 
 	 %feature("director") Config;
 	 %feature("director") State;
@@ -132,3 +125,16 @@ namespace vci {
 }
 
 %include "../../vci.hpp"
+
+%pythoncode {
+	class Exception(__builtin__.Exception, _vci_exception):
+		def __init__(self, app_tag, info, path, *args):
+			__builtin__.Exception.__init__(self, *args)
+			_vci_exception.__init__(self, app_tag, info, path, *args)
+		def what(self):
+			return _vci_exception.what(self)
+		def __repr__(self):
+			return self.what()
+		def __str__(self):
+			return self.what()
+}
