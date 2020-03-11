@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2019, AT&T Intellectual Property.
+// Copyright (c) 2018-2020, AT&T Intellectual Property.
 // All rights reserved.
 //
 // SPDX-License-Identifier: LGPL-2.1-only
@@ -6,7 +6,6 @@
 package main
 
 import (
-	"encoding/xml"
 	"github.com/danos/mgmterror"
 	"github.com/danos/vci"
 	"runtime"
@@ -268,15 +267,7 @@ func vci_error_to_error(cerr *C.vci_error) error {
 	err := mgmterror.NewOperationFailedApplicationError()
 	err.AppTag = C.GoString(cerr.app_tag)
 	err.Path = C.GoString(cerr.path)
-	info := mgmterror.MgmtErrorInfo{
-		mgmterror.MgmtErrorInfoTag{
-			XMLName: xml.Name{
-				Local: "operation-failed",
-			},
-			Value: C.GoString(cerr.info),
-		},
-	}
-	err.Info = info
+	err.Message = C.GoString(cerr.info)
 	return err
 }
 
