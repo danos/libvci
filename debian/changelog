@@ -1,3 +1,13 @@
+libvci (1.7) unstable; urgency=medium
+
+  [ John Southworth ]
+  * Use native python3 class as the exception type.
+
+  [ William Ivory ]
+  * Fix construction of VCI RPC management errors (Closes: VRVDR-49736)
+
+ -- William Ivory <william.ivory@intl.att.com>  Fri, 03 Apr 2020 11:41:44 +0100
+
 libvci (1.6) unstable; urgency=medium
 
   * DANOS Import Master
