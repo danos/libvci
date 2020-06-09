@@ -49,7 +49,7 @@ namespace vci {
 			const EncodedInput& input)  = 0;
 		virtual void check(
 			const EncodedInput& input)  = 0;
-		virtual EncodedOutput get() = 0;
+		virtual EncodedOutput get() { return "{}"; }
 		virtual ~Config() {};
 	};
 

@@ -47,7 +47,9 @@ _vci_config_check_call(vci_config_object *config, char *in, vci_error *err)
 void
 _vci_config_get_call(vci_config_object *config, char **out)
 {
-	config->get(config->obj, out);
+	if (config->get != NULL) {
+		config->get(config->obj, out);
+	}
 }
 
 void
