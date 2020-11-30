@@ -93,6 +93,14 @@ PyObject *py_get_vci_ex_type() {
 	return output;
 }
 
+PyObject *vci_ex_to_py_vci_ex(const vci::Exception& ex) {
+	OwnedPyObject py_exception_type = py_get_vci_ex_type();
+	return PyObject_CallFunction(py_exception_type.get(), "sss",
+		ex.app_tag().c_str(),
+		ex.info().c_str(),
+		ex.path().c_str());
+}
+
 vci::Exception py_vci_ex_to_vci_ex(PyObject *obj) {
 	return vci::Exception(
 		py_str_to_string(PyObject_CallMethod(obj, "app_tag", "")),

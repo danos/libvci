@@ -14,6 +14,7 @@
 %include "std_string.i"
 %include "std_shared_ptr.i"
 %include "std_except.i"
+%include "exception.i"
 
 %shared_ptr(vci::RPCCall);
 %shared_ptr(vci::Subscription);
@@ -23,6 +24,21 @@
 	if ($error != NULL) {
 		py_handle_ex();
 	}
+}
+
+%exception {
+    try {
+        $action
+    } catch (const vci::Exception &ex) {
+        OwnedPyObject py_ex_type = py_get_vci_ex_type();
+        OwnedPyObject py_ex = vci_ex_to_py_vci_ex(ex);
+        PyErr_SetObject(py_ex_type.get(), py_ex.get());
+        SWIG_fail;
+    } catch (const std::exception& ex) {
+        SWIG_exception_fail(SWIG_SystemError, (&ex)->what());
+    } catch(...) {
+        SWIG_exception_fail(SWIG_RuntimeError,"unknown exception");
+    }
 }
 
 namespace vci {
