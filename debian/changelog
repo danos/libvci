@@ -1,3 +1,10 @@
+libvci (1.8.1) unstable; urgency=medium
+
+  [ John Southworth ]
+  * Map C++ exceptions to python exceptions
+
+ -- William Ivory <william.ivory@intl.att.com>  Mon, 07 Dec 2020 16:48:39 +0000
+
 libvci (1.8) unstable; urgency=medium
 
   [ John Southworth ]
