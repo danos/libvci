@@ -11,7 +11,7 @@ Build-depends:
  golang-go,
  pkg-config,
  python3-dev,
- swig
+ swig (>= 3.0)
 Standards-Version: 3.9.8
 
 Package: libvci1

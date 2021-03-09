@@ -14,7 +14,7 @@ all: $(TARGET)
 	install --mode=644 -D $(TARGET) dist/$(VENDORARCH)
 
 vci_wrap.cxx: vci.i
-	swig3.0 -Wall -c++ -perl5 vci.i
+	swig -Wall -c++ -perl5 vci.i
 
 $(TARGET): vci_wrap.cxx helpers.hpp ../../vci.hpp
 	g++ $(CPPFLAGS) $(CXXFLAGS) $(shell perl -MExtUtils::Embed -e ccopts) -L../../ -shared -fPIC $(LDFLAGS) -Wl,-soname,$(TARGET) -o $(TARGET) -std=c++11 -lvci vci_wrap.cxx
