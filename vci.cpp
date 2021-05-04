@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2019, AT&T Intellectual Property.
+// Copyright (c) 2018-2021, AT&T Intellectual Property.
 // All rights reserved.
 //
 // SPDX-License-Identifier: LGPL-2.1-only
@@ -118,6 +118,27 @@ _vci_cpp_call_rpc_free(void *obj)
 	delete method;
 }
 
+int
+_vci_cpp_call_rpc_meta(void *obj, const char *meta, const char *in, char **out, vci_error *error)
+{
+	auto method = (vci::MethodMeta *) obj;
+	try {
+		auto got = method->operator()(std::string(meta), std::string(in));
+		*out = strdup(got.c_str());
+	} catch (const vci::Exception &e) {
+		_vci_cpp_exception_to_error(e, error);
+		return -1;
+	}
+	return 0;
+}
+
+void
+_vci_cpp_call_rpc_meta_free(void *obj)
+{
+	auto method = (vci::MethodMeta *) obj;
+	delete method;
+}
+
 struct _vci::_CompImpl {
 	vci_component* comp;
 	~_CompImpl() {
@@ -193,6 +214,16 @@ private:
 	const vci::MethodFn _fn;
 };
 
+class methodMetaFunc : public vci::MethodMeta {
+public:
+	methodMetaFunc (vci::MethodMetaFn fn) : _fn(fn) {}
+	std::string operator()(const std::string &meta, const std::string &in) {
+		return _fn(meta, in);
+	}
+private:
+	const vci::MethodMetaFn _fn;
+};
+
 
 vci::Model&
 vci::Model::rpc(const std::string& module,
@@ -211,6 +242,22 @@ vci::Model::rpc(const std::string& module,
        return *this;
 }
 
+vci::Model&
+vci::Model::rpc(const std::string& module,
+				const std::string& name,
+				vci::MethodMetaFn fn)
+{
+	return this->rpc(module, name, new methodMetaFunc(fn));
+}
+
+vci::Model&
+vci::Model::rpc(const std::string& module,
+				const std::string& name,
+				vci::MethodMeta* fn)
+{
+	this->_meta_methods[module][name] = fn;
+	return *this;
+}
 
 vci::Component::Component(std::string name)
 {
@@ -255,6 +302,17 @@ vci::Component::model(Model &model)
 				_vci_cpp_call_rpc_free,
 			};
 			vci_model_rpc(mod, module_rpc.first.c_str(),
+						  name_method.first.c_str(), &rpc);
+		}
+	}
+	for (const auto &module_rpc : model._meta_methods) {
+		for (const auto &name_method : module_rpc.second) {
+			vci_rpc_meta_object rpc = {
+				name_method.second,
+				_vci_cpp_call_rpc_meta,
+				_vci_cpp_call_rpc_meta_free,
+			};
+			vci_model_rpc_meta(mod, module_rpc.first.c_str(),
 						  name_method.first.c_str(), &rpc);
 		}
 	}

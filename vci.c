@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2019, AT&T Intellectual Property.
+// Copyright (c) 2018-2021, AT&T Intellectual Property.
 // All rights reserved.
 //
 // SPDX-License-Identifier: LGPL-2.1-only
@@ -155,6 +155,14 @@ vci_model_rpc(vci_model *model, const char *module_name,
 {
 	_vci_model_rpc(model->md, (char *)module_name, (char *)rpc_name,
 				   (vci_rpc_object*) rpc);
+}
+
+void
+vci_model_rpc_meta(vci_model *model, const char *module_name,
+			  const char * rpc_name, const vci_rpc_meta_object* rpc)
+{
+	_vci_model_rpc_meta(model->md, (char *)module_name, (char *)rpc_name,
+				   (vci_rpc_meta_object*) rpc);
 }
 
 void

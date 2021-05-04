@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2020, AT&T Intellectual Property.
+// Copyright (c) 2018-2021, AT&T Intellectual Property.
 // All rights reserved.
 //
 // SPDX-License-Identifier: LGPL-2.1-only
@@ -6,10 +6,11 @@
 package main
 
 import (
-	"github.com/danos/mgmterror"
-	"github.com/danos/vci"
 	"runtime"
 	"unsafe"
+
+	"github.com/danos/mgmterror"
+	"github.com/danos/vci"
 )
 
 /*
@@ -82,8 +83,22 @@ _vci_rpc_call(vci_rpc_object *rpc, char *in, char **out, vci_error *err)
 	return rpc->call(rpc->obj, in, out, err);
 }
 
+int
+_vci_rpc_meta_call(vci_rpc_meta_object *rpc, char *meta, char *in, char **out, vci_error *err)
+{
+	return rpc->call(rpc->obj, meta, in, out, err);
+}
+
 void
 _vci_rpc_free_call(vci_rpc_object *rpc)
+{
+	if (rpc->free == NULL) {
+		return;
+	}
+	rpc->free(rpc->obj);
+}
+void
+_vci_rpc_meta_free_call(vci_rpc_meta_object *rpc)
 {
 	if (rpc->free == NULL) {
 		return;
@@ -226,6 +241,15 @@ func (m *model) addRPC(moduleName, rpcName string, crpc_obj *C.vci_rpc_object) {
 	crpc.addRPC(rpcName, crpc_obj)
 }
 
+func (m *model) addMetaRPC(moduleName, rpcName string, crpc_obj *C.vci_rpc_meta_object) {
+	crpc, ok := m.rpcs[moduleName]
+	if !ok {
+		m.rpcs[moduleName] = cRPC()
+		crpc = m.rpcs[moduleName]
+	}
+	crpc.addMetaRPC(rpcName, crpc_obj)
+}
+
 func (m *model) getModuleRPCs(moduleName string) *crpc {
 	return m.rpcs[moduleName]
 }
@@ -254,6 +278,29 @@ func (rpc *crpc) addRPC(name string, cRPC *C.vci_rpc_object) {
 		_vci_error_init(&cerr)
 		defer _vci_error_free(&cerr)
 		rc := C._vci_rpc_call(&rpcCpy, cin, &cout, &cerr)
+		if rc != 0 {
+			return encodedString(""), vci_error_to_error(&cerr)
+		}
+		return encodedString(C.GoString(cout)), nil
+	}
+}
+
+func (rpc *crpc) addMetaRPC(name string, cRPC *C.vci_rpc_meta_object) {
+	rpcCpy := *cRPC
+	runtime.SetFinalizer(&rpcCpy, func(rpc *C.vci_rpc_meta_object) {
+		C._vci_rpc_meta_free_call(rpc)
+	})
+	rpc.rpcs[name] = func(meta, in encodedString) (encodedString, error) {
+		cmeta := C.CString(string(meta))
+		defer C.free(unsafe.Pointer(cmeta))
+		cin := C.CString(string(in))
+		defer C.free(unsafe.Pointer(cin))
+		var cout *C.char
+		defer func() { C.free(unsafe.Pointer(cout)) }()
+		var cerr C.vci_error
+		_vci_error_init(&cerr)
+		defer _vci_error_free(&cerr)
+		rc := C._vci_rpc_meta_call(&rpcCpy, cmeta, cin, &cout, &cerr)
 		if rc != 0 {
 			return encodedString(""), vci_error_to_error(&cerr)
 		}

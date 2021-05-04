@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2019, AT&T Intellectual Property.
+// Copyright (c) 2018-2021, AT&T Intellectual Property.
 // All rights reserved.
 //
 // SPDX-License-Identifier: LGPL-2.1-only
@@ -30,6 +30,20 @@ public:
 private:
 	PyGILState_STATE _gstate;
 };
+
+long py_callable_num_args(PyObject *obj) {
+	OwnedPyObject code = PyObject_GetAttrString(obj, "__code__");
+	OwnedPyObject argcount = PyObject_GetAttrString(code.get(), "co_argcount");
+	return PyInt_AsLong(argcount.get());
+}
+
+int py_object_is_rpc_method(PyObject *obj) {
+	return PyCallable_Check(obj) && py_callable_num_args(obj) == 1;
+}
+
+int py_object_is_rpc_meta_method(PyObject *obj) {
+	return PyCallable_Check(obj) && py_callable_num_args(obj) == 2;
+}
 
 std::string py_str_to_string(PyObject *obj) {
 	std::string out;
@@ -150,6 +164,30 @@ private:
 
 vci::Method *py_gen_method(PyObject *func) {
 	return new PyMethod(func);
+}
+
+class PyMethodMeta : public vci::MethodMeta {
+public:
+	PyMethodMeta(PyObject *func) : _func(func) {}
+	std::string operator()(const std::string &encoded_meta,
+						   const std::string &encoded_input) {
+		auto gil = GILEnsure();
+		OwnedPyObject metaobj = py_decode_object(encoded_meta);
+		OwnedPyObject inobj = py_decode_object(encoded_input);
+		OwnedPyObject out = PyObject_CallFunctionObjArgs(
+			this->_func.get(), metaobj.get(), inobj.get(), NULL);
+		if (PyErr_Occurred() != NULL) {
+			py_handle_ex();
+		}
+		std::string str = py_encode_object(out.get());
+		return str;
+	}
+private:
+    OwnedPyObject _func;
+};
+
+vci::MethodMeta *py_gen_method_meta(PyObject *func) {
+	return new PyMethodMeta(func);
 }
 
 class PySubscriber : public vci::Subscriber {

@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2019, AT&T Intellectual Property.
+// Copyright (c) 2018-2021, AT&T Intellectual Property.
 // All rights reserved.
 //
 // SPDX-License-Identifier: LGPL-2.1-only
@@ -122,6 +122,19 @@ func _vci_model_rpc(
 	vciModel := objects.Get(OD(md)).(vci.Model)
 	libvciModel := vciModel.(*model)
 	libvciModel.addRPC(name, C.GoString(rpcName), cobj)
+	vciModel.RPC(name, libvciModel.getModuleRPCs(name).RPCs())
+}
+
+//export _vci_model_rpc_meta
+func _vci_model_rpc_meta(
+	md C.uint64_t,
+	modName, rpcName *C.char,
+	cobj *C.vci_rpc_meta_object,
+) {
+	name := C.GoString(modName)
+	vciModel := objects.Get(OD(md)).(vci.Model)
+	libvciModel := vciModel.(*model)
+	libvciModel.addMetaRPC(name, C.GoString(rpcName), cobj)
 	vciModel.RPC(name, libvciModel.getModuleRPCs(name).RPCs())
 }
 

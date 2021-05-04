@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2019, AT&T Intellectual Property.
+// Copyright (c) 2018-2021, AT&T Intellectual Property.
 // All rights reserved.
 //
 // SPDX-License-Identifier: LGPL-2.1-only
@@ -49,6 +49,12 @@ typedef struct {
 
 typedef struct {
 	void *obj;
+	int (*call) (void *obj, const char *meta, const char *in, char **out, vci_error *error);
+	void (*free)(void *obj);
+} vci_rpc_meta_object;
+
+typedef struct {
+	void *obj;
 	void (*subscriber)(void *obj, const char *in);
 	void (*free)(void *obj);
 } vci_subscriber_object;
@@ -77,6 +83,8 @@ void vci_model_config(vci_model *model, const vci_config_object* config);
 void vci_model_state(vci_model *model, const vci_state_object* state);
 void vci_model_rpc(vci_model *model, const char *module_name,
 				   const char *rpc_name, const vci_rpc_object* rpc);
+void vci_model_rpc_meta(vci_model *model, const char *module_name,
+				   const char *rpc_name, const vci_rpc_meta_object* rpc);
 void vci_model_free(vci_model *model);
 
 int vci_client_dial(vci_client **client, vci_error *error);

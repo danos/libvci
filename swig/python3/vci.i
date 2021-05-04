@@ -47,6 +47,7 @@ namespace vci {
 	 %feature("director") Config;
 	 %feature("director") State;
 	 %feature("director") Method;
+	 %feature("director") MethodMeta;
 	 %feature("director") Subscriber;
 
 	 %typemap(directorout) EncodedOutput {
@@ -65,7 +66,11 @@ namespace vci {
 	 }
 
 	 %typemap(typecheck, precedence=0) vci::Method * {
-		 $1 = PyCallable_Check($input);
+		 $1 = py_object_is_rpc_method($input);
+	 }
+
+	 %typemap(typecheck, precedence=0) vci::MethodMeta * {
+		 $1 = py_object_is_rpc_meta_method($input);
 	 }
 
 	 %typemap(in, noblock=1) vci::Config * (void  *argp = 0, int res = 0) {
@@ -89,6 +94,11 @@ namespace vci {
 	 %typemap(in) vci::Method * {
 		 Py_INCREF($input);
 		 $1 = py_gen_method($input);
+	 }
+
+     %typemap(in) vci::MethodMeta * {
+		 Py_INCREF($input);
+		 $1 = py_gen_method_meta($input);
 	 }
 
 	 %typemap(typecheck, precedence=0) vci::Subscriber * {

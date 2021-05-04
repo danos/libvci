@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2019, AT&T Intellectual Property.
+// Copyright (c) 2018-2021, AT&T Intellectual Property.
 // All rights reserved.
 //
 // SPDX-License-Identifier: LGPL-2.1-only
@@ -21,6 +21,7 @@ namespace vci {
 	typedef std::string EncodedOutput;
 
 	typedef std::function<EncodedOutput(const EncodedInput&)> MethodFn;
+	typedef std::function<EncodedOutput(const EncodedInput&, const EncodedInput&)> MethodMetaFn;
 	typedef std::function<void(const EncodedInput&)> SubscriberFn;
 
 	class Component;
@@ -65,6 +66,12 @@ namespace vci {
 		virtual ~Method() {};
 	};
 
+	class MethodMeta {
+	public:
+		virtual EncodedOutput operator()(const EncodedInput& meta, const EncodedInput& input) = 0;
+		virtual ~MethodMeta() {};
+	};
+
 	class Subscriber {
 	public:
 		virtual void operator()(const EncodedInput& input) = 0;
@@ -82,6 +89,11 @@ namespace vci {
 				   Method* rpc);
 		Model& rpc(const std::string& module,
 				   const std::string& name, MethodFn rpc);
+		Model& rpc(const std::string& module,
+				   const std::string& name,
+				   MethodMeta* rpc);
+		Model& rpc(const std::string& module,
+				   const std::string& name, MethodMetaFn rpc);
 		friend class Component;
 	private:
 		std::string _name;
@@ -89,6 +101,8 @@ namespace vci {
 		State* _state = NULL;
 		std::map<std::string,
 				 std::map<std::string, vci::Method*>> _methods;
+		std::map<std::string,
+				 std::map<std::string, vci::MethodMeta*>> _meta_methods;
 	};
 
 	class Client;
