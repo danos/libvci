@@ -1,3 +1,13 @@
+libvci (1.10) unstable; urgency=medium
+
+  [ William Ivory ]
+  * Fix compat level and swig refs for deb11 build
+
+  [ John Southworth ]
+  * Add support for methods that wish to receive metadata.
+
+ -- Paul Carson <paul.carson@intl.att.com>  Thu, 01 Jul 2021 14:05:28 +0100
+
 libvci (1.9) unstable; urgency=medium
 
   [ John Southworth ]
